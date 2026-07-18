@@ -7,11 +7,13 @@
 import { createServer, type Server } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { chromium, type Browser, type Page } from 'playwright';
 import type { Config } from '../config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 export interface CommandInfo {
   name: string;
@@ -57,7 +59,31 @@ export class EditorSession {
   private async init(): Promise<void> {
     const html = await this.buildPage();
 
-    this.httpServer = createServer((_req, res) => {
+    // Under GPL the editor is served from the local npm package: the CKEditor
+    // CDN is a commercial distribution channel and boots read-only with a
+    // 'GPL' key. Self-hosting is the GPL-compliant channel.
+    const vendorDir = this.isGpl
+      ? join(dirname(require.resolve('ckeditor5/package.json')), 'dist', 'browser')
+      : null;
+
+    this.httpServer = createServer(async (req, res) => {
+      const path = (req.url ?? '/').split('?')[0];
+      if (vendorDir && path.startsWith('/vendor/')) {
+        const name = path.slice('/vendor/'.length);
+        if (!/^[\w.-]+$/.test(name)) {
+          res.writeHead(400);
+          return res.end('bad request');
+        }
+        try {
+          const body = await readFile(join(vendorDir, name));
+          const type = name.endsWith('.css') ? 'text/css' : 'text/javascript';
+          res.writeHead(200, { 'content-type': type });
+          return res.end(body);
+        } catch {
+          res.writeHead(404);
+          return res.end('not found');
+        }
+      }
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       res.end(html);
     });
@@ -90,10 +116,25 @@ export class EditorSession {
     this.ready = true;
   }
 
-  /** Reads the hosted page template and pins the configured CKEditor version. */
+  private get isGpl(): boolean {
+    return this.config.licenseKey === 'GPL';
+  }
+
+  /**
+   * Reads the hosted page template and pins the configured CKEditor version.
+   * Under GPL, CDN URLs are rewritten to the locally served npm build and the
+   * premium bundle (commercial-only) is stripped entirely.
+   */
   private async buildPage(): Promise<string> {
     const template = await readFile(join(__dirname, 'page.html'), 'utf8');
-    return template.replace(/48\.3\.1/g, this.config.version);
+    const pinned = template.replace(/48\.3\.1/g, this.config.version);
+    if (!this.isGpl) return pinned;
+    return pinned
+      .split('\n')
+      .filter((line) => !line.includes('ckeditor5-premium-features'))
+      .join('\n')
+      .replace(/https:\/\/cdn\.ckeditor\.com\/ckeditor5\/[\d.]+\/ckeditor5\.css/g, '/vendor/ckeditor5.css')
+      .replace(/https:\/\/cdn\.ckeditor\.com\/ckeditor5\/[\d.]+\/ckeditor5\.umd\.js/g, '/vendor/ckeditor5.umd.js');
   }
 
   private get editorPage(): Page {

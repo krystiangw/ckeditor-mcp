@@ -39,7 +39,7 @@ cp .env.example .env      # then paste your CKEditor license key
 npm run build
 ```
 
-Get a free 14-day trial license key (unlocks all premium features) at [portal.ckeditor.com](https://portal.ckeditor.com/). Without a key the server runs on CKEditor's open-source (GPL) feature set.
+Get a free 14-day trial license key (unlocks all premium features) at [portal.ckeditor.com](https://portal.ckeditor.com/). Without a key the server runs on CKEditor's open-source (GPL) feature set — served from the local npm package rather than the CDN, because CKEditor's CDN is a commercial distribution channel and boots read-only under a `GPL` key.
 
 Prove it works end to end:
 

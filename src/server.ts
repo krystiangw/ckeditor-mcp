@@ -10,10 +10,12 @@ import { EditorSession } from './editor/session.js';
 
 const pkg = { name: 'ckeditor-mcp', version: '0.1.0' };
 
+type ToolContent =
+  | { type: 'text'; text: string }
+  | { type: 'image'; data: string; mimeType: string };
+
 /** Wraps a tool body so any thrown error becomes an MCP error result. */
-function guard<T extends unknown[]>(
-  fn: (...args: T) => Promise<{ content: { type: 'text'; text: string }[] }>,
-) {
+function guard<T extends unknown[]>(fn: (...args: T) => Promise<{ content: ToolContent[] }>) {
   return async (...args: T) => {
     try {
       return await fn(...args);
@@ -129,7 +131,7 @@ export function getServer(session: EditorSession): McpServer {
       const png = await session.screenshot();
       return {
         content: [{ type: 'image' as const, data: png.toString('base64'), mimeType: 'image/png' }],
-      } as unknown as { content: { type: 'text'; text: string }[] };
+      };
     }),
   );
 
