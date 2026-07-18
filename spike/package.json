@@ -1,0 +1,13 @@
+{
+  "name": "ckeditor-mcp-spike",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Throwaway spike: can CKEditor 5 premium run headless and respond to commands?",
+  "scripts": {
+    "spike": "node run.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.61.1"
+  }
+}

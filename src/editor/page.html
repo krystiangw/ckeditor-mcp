@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ckeditor-mcp host</title>
+  <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/48.3.1/ckeditor5.css" />
+  <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5-premium-features/48.3.1/ckeditor5-premium-features.css" />
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    .ck-editor__editable { min-height: 400px; }
+    #host { max-width: 820px; margin: 24px auto; }
+  </style>
+</head>
+<body>
+  <div id="host"><div id="editor"><p>ckeditor-mcp ready.</p></div></div>
+
+  <!-- UMD globals: CKEDITOR (open source) + CKEDITOR_PREMIUM_FEATURES (premium). -->
+  <script src="https://cdn.ckeditor.com/ckeditor5/48.3.1/ckeditor5.umd.js"></script>
+  <script src="https://cdn.ckeditor.com/ckeditor5-premium-features/48.3.1/ckeditor5-premium-features.umd.js"></script>
+  <script>
+    // Signals the MCP host (Playwright) polls: window.__ck = { ready, error, premium }.
+    window.__ck = { ready: false, error: null, premium: false };
+
+    (function boot() {
+      try {
+        var C = window.CKEDITOR;
+        var P = window.CKEDITOR_PREMIUM_FEATURES || {};
+
+        var plugins = [
+          C.Essentials, C.Paragraph, C.Heading,
+          C.Bold, C.Italic, C.Underline, C.Strikethrough, C.Code, C.Subscript, C.Superscript,
+          C.Link, C.List, C.ListProperties, C.TodoList, C.BlockQuote,
+          C.Table, C.TableToolbar, C.TableProperties, C.TableCellProperties,
+          C.CodeBlock, C.HorizontalLine, C.Alignment, C.Indent, C.IndentBlock,
+          C.RemoveFormat, C.Autoformat, C.PasteFromOffice, C.GeneralHtmlSupport, C.SourceEditing,
+          C.WordCount, C.Highlight, C.FontColor, C.FontBackgroundColor, C.FontFamily, C.FontSize,
+          C.FindAndReplace, C.SpecialCharacters, C.SpecialCharactersEssentials
+        ].filter(Boolean);
+
+        // Premium features that work with just a license key (no cloud dependency).
+        var premiumAdded = [];
+        ['FormatPainter', 'CaseChange'].forEach(function (name) {
+          if (P[name]) { plugins.push(P[name]); premiumAdded.push(name); }
+        });
+        window.__ck.premium = premiumAdded.length > 0;
+        window.__ck.premiumPlugins = premiumAdded;
+
+        C.ClassicEditor.create(document.querySelector('#editor'), {
+          licenseKey: window.__CKE_LICENSE__ || 'GPL',
+          plugins: plugins,
+          toolbar: {
+            items: [
+              'undo', 'redo', '|', 'heading', '|',
+              'bold', 'italic', 'underline', 'strikethrough', 'code', '|',
+              'link', 'bulletedList', 'numberedList', 'todoList', 'blockQuote', '|',
+              'insertTable', 'codeBlock', 'horizontalLine', '|',
+              'fontColor', 'fontBackgroundColor', 'highlight', 'alignment', '|',
+              'findAndReplace', 'removeFormat', 'sourceEditing'
+            ],
+            shouldNotGroupWhenFull: true
+          },
+          // Let the agent round-trip arbitrary HTML without the editor stripping it.
+          htmlSupport: {
+            allow: [{ name: /.*/, attributes: true, classes: true, styles: true }]
+          },
+          table: {
+            contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties']
+          }
+        }).then(function (editor) {
+          window.__editor = editor;
+          window.__ck.ready = true;
+        }).catch(function (err) {
+          window.__ck.error = String((err && err.stack) || err);
+        });
+      } catch (err) {
+        window.__ck.error = String((err && err.stack) || err);
+      }
+    })();
+  </script>
+</body>
+</html>

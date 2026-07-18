@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CKEditor headless spike</title>
+  <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/48.3.1/ckeditor5.css" />
+  <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5-premium-features/48.3.1/ckeditor5-premium-features.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "ckeditor5": "https://cdn.ckeditor.com/ckeditor5/48.3.1/ckeditor5.js",
+        "ckeditor5/": "https://cdn.ckeditor.com/ckeditor5/48.3.1/",
+        "ckeditor5-premium-features": "https://cdn.ckeditor.com/ckeditor5-premium-features/48.3.1/ckeditor5-premium-features.js",
+        "ckeditor5-premium-features/": "https://cdn.ckeditor.com/ckeditor5-premium-features/48.3.1/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="editor"><p>Hello from the spike.</p></div>
+  <script type="module">
+    window.__spike = { ready: false, error: null, premiumLoaded: false };
+    try {
+      const core = await import('ckeditor5');
+      const { ClassicEditor, Essentials, Paragraph, Bold, Italic, Heading, Link, List } = core;
+
+      // Try premium separately so we can tell if premium is what fails.
+      let premiumPlugins = [];
+      let premiumToolbar = [];
+      try {
+        const premium = await import('ckeditor5-premium-features');
+        if (premium.FormatPainter) {
+          premiumPlugins.push(premium.FormatPainter);
+          premiumToolbar.push('formatPainter');
+          window.__spike.premiumLoaded = true;
+        }
+      } catch (e) {
+        window.__spike.premiumError = String(e && e.message || e);
+      }
+
+      const editor = await ClassicEditor.create(document.querySelector('#editor'), {
+        licenseKey: window.CK_LICENSE || 'GPL',
+        plugins: [Essentials, Paragraph, Bold, Italic, Heading, Link, List, ...premiumPlugins],
+        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', ...(premiumToolbar.length ? ['|', ...premiumToolbar] : [])]
+      });
+      window.__editor = editor;
+      window.__spike.ready = true;
+    } catch (e) {
+      window.__spike.error = String(e && e.stack || e);
+    }
+  </script>
+</body>
+</html>
