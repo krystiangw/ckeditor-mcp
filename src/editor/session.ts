@@ -43,7 +43,14 @@ export class EditorSession {
   /** Lazily boots the browser + editor on first use. Safe to call repeatedly. */
   async ensureReady(): Promise<void> {
     if (this.ready) return;
-    if (!this.initPromise) this.initPromise = this.init();
+    if (!this.initPromise) {
+      // On a transient failure (Chromium launch, CDN hiccup), tear down any
+      // partial state and clear the cached promise so a later call can retry.
+      this.initPromise = this.init().catch(async (err) => {
+        await this.close();
+        throw err;
+      });
+    }
     await this.initPromise;
   }
 

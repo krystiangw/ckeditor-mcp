@@ -25,6 +25,8 @@
       try {
         var C = window.CKEDITOR;
         var P = window.CKEDITOR_PREMIUM_FEATURES || {};
+        var license = window.__CKE_LICENSE__ || 'GPL';
+        var isGpl = license === 'GPL';
 
         var plugins = [
           C.Essentials, C.Paragraph, C.Heading,
@@ -38,15 +40,19 @@
         ].filter(Boolean);
 
         // Premium features that work with just a license key (no cloud dependency).
+        // CKEditor rejects premium plugins under a 'GPL' license, so only register
+        // them when a real (trial/dev/commercial) license key is configured.
         var premiumAdded = [];
-        ['FormatPainter', 'CaseChange'].forEach(function (name) {
-          if (P[name]) { plugins.push(P[name]); premiumAdded.push(name); }
-        });
+        if (!isGpl) {
+          ['FormatPainter', 'CaseChange'].forEach(function (name) {
+            if (P[name]) { plugins.push(P[name]); premiumAdded.push(name); }
+          });
+        }
         window.__ck.premium = premiumAdded.length > 0;
         window.__ck.premiumPlugins = premiumAdded;
 
         C.ClassicEditor.create(document.querySelector('#editor'), {
-          licenseKey: window.__CKE_LICENSE__ || 'GPL',
+          licenseKey: license,
           plugins: plugins,
           toolbar: {
             items: [
