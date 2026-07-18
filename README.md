@@ -64,6 +64,8 @@ npm run smoke
 
 ## Connect an MCP client
 
+Ready-made client config and a sample agent session are in [`examples/`](./examples).
+
 ### Claude Desktop / Cursor (stdio)
 
 Add to your MCP client config (e.g. `claude_desktop_config.json`):

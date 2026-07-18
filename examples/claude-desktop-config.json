@@ -1,0 +1,12 @@
+{
+  "//": "Copy this block into your Claude Desktop config (claude_desktop_config.json) or Cursor MCP config. Adjust the absolute path and license key. Run `npm run build` first so dist/index.js exists.",
+  "mcpServers": {
+    "ckeditor": {
+      "command": "node",
+      "args": ["/absolute/path/to/ckeditor-mcp/dist/index.js"],
+      "env": {
+        "CKEDITOR_LICENSE_KEY": "your-ckeditor-license-key-or-GPL"
+      }
+    }
+  }
+}
