@@ -1,8 +1,8 @@
 # ckeditor-mcp
 
-**A [Model Context Protocol](https://modelcontextprotocol.io) server that lets any AI agent operate a real CKEditor 5 instance.**
+**A [Model Context Protocol](https://modelcontextprotocol.io) server that lets any AI agent operate a real CKEditor 5 instance — built for server-side content workflows.**
 
-Point Claude, Cursor, or any MCP client at this server and it can read the document, set and insert HTML, run any editor command, inspect the command surface, count words, and screenshot the rendered result — driving the *same* editor APIs a human user's clicks would.
+Automation pipelines, document-processing jobs, and interactive agents alike: point Claude, Cursor, or any MCP client at this server and it can read the document, set and insert HTML, run any editor command, inspect the command surface, count words, and screenshot the rendered result — driving the *same* editor APIs a human user's clicks would. Content work that used to require a human in a browser tab becomes an agent-callable tool surface, with the genuine editor engine (schema, commands, premium features, licensing) underneath.
 
 ```
 ┌─────────────┐   MCP (stdio / HTTP)   ┌───────────────┐   Playwright   ┌────────────────────┐
@@ -119,8 +119,14 @@ The `execute-command` + `list-commands` pair is deliberately generic: it exposes
 
 - **Export to PDF / Word, Import from Word.** CKEditor's converters run in the cloud and authenticate with *Cloud Services* credentials (environment ID + access key), which are separate from the editor license key. These tools will activate automatically when `CKEDITOR_CS_*` are set, and report as unavailable otherwise.
 - **AI tools** (`AIChat`, `AIQuickActions`, `AIReview`) — CKEditor's hosted AI service is driven by the license key, a natural fit for an `ckeditor-ai` tool.
+- **Suggestions mode — governed agent editing.** Agent edits materialized as Track Changes
+  suggestions instead of direct mutations, so a human accepts or rejects each change.
+  A working end-to-end version of this pattern (external agent → leased plan queue →
+  suggestions in the human's editor) ships in the companion demo,
+  [ckeditor-agent-demo](https://github.com/krystiangw/ckeditor-agent-demo).
 - **Collaboration** — comments, suggestions, and track-changes state as first-class tools.
-- **Multiple documents / sessions** per server.
+- **Multiple documents / sessions** per server, plus a hardened hosted deployment of the
+  Streamable HTTP transport (auth, per-session browser contexts, limits).
 
 ## Design notes
 
